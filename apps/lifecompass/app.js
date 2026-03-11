@@ -1980,22 +1980,19 @@ function initTheme() {
 }
 
 function updateThemeIcon(isDark) {
-    const btn = document.getElementById('theme-toggle-btn');
-    if(!btn) return;
-    const moon = btn.querySelector('.mode-moon');
-    const sun = btn.querySelector('.mode-sun');
-    if(moon && sun) {
-        if(isDark) {
-            moon.style.display = 'none';
-            sun.style.display = 'flex';
-        } else {
-            moon.style.display = 'flex';
-            sun.style.display = 'none';
-        }
-    }
+    // Update ALL theme toggle buttons (chat toolbar + sidebar)
+    document.querySelectorAll('.theme-icon.mode-moon').forEach(el => {
+        el.style.display = isDark ? 'none' : 'flex';
+    });
+    document.querySelectorAll('.theme-icon.mode-sun').forEach(el => {
+        el.style.display = isDark ? 'flex' : 'none';
+    });
+    // Update sidebar label
+    const label = document.querySelector('.sidebar-theme-label');
+    if(label) label.textContent = isDark ? '切换白天模式' : '切换夜间模式';
 }
 
-document.getElementById('theme-toggle-btn')?.addEventListener('click', () => {
+function doToggleTheme() {
     const isDark = document.body.classList.contains('theme-dark');
     if(isDark) {
         document.body.classList.remove('theme-dark');
@@ -2008,7 +2005,9 @@ document.getElementById('theme-toggle-btn')?.addEventListener('click', () => {
         DB.set('theme', 'dark');
         updateThemeIcon(true);
     }
-});
+}
+document.getElementById('theme-toggle-btn')?.addEventListener('click', doToggleTheme);
+document.getElementById('sidebar-theme-btn')?.addEventListener('click', doToggleTheme);
 
 if(window.matchMedia) {
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {

@@ -290,6 +290,47 @@ h4 {
     border-top: 1px solid var(--border);
 }
 
+.sidebar-theme-toggle {
+    margin-bottom: 8px;
+}
+
+.sidebar-theme-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 14px;
+    background: rgba(0, 0, 0, 0.04);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-secondary);
+    transition: all var(--transition-base);
+}
+
+.sidebar-theme-btn:hover {
+    background: rgba(0, 0, 0, 0.08);
+    color: var(--text-primary);
+}
+
+.sidebar-theme-btn .theme-icon {
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+}
+
+body.theme-dark .sidebar-theme-btn {
+    background: rgba(138, 43, 226, 0.15);
+    border-color: rgba(138, 43, 226, 0.25);
+    color: #e0d8f0;
+}
+
+body.theme-dark .sidebar-theme-btn:hover {
+    background: rgba(138, 43, 226, 0.25);
+    color: #fff;
+}
+
 .streak-widget {
     display: flex;
     align-items: center;
