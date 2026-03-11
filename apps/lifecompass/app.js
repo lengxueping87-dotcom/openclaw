@@ -173,8 +173,24 @@ function initMentor(){
     const q=qs[Math.floor(Math.random()*qs.length)];
     document.getElementById('mentor-quote').textContent=`"${q.t}" — ${q.a}`;
     
-    // 如果没有历史记录，初始化一次欢迎语
-    if(chatHistory.length===0) startConv('welcome');
+    // 如果没有历史记录，先显示使用指引再欢迎
+    if(chatHistory.length===0) {
+        // 新用户功能引导
+        const guideHtml = `🎉 **欢迎来到 Middle灯塔！** 这里是你的专属成长空间：
+
+🎁 **今日盲盒** — 每天拆开导师为你定制的成长任务
+🧭 **人生罗盘** — 从小目标到大愿景，一步步清晰可见
+📝 **写给自己** — 你的私密日记本，和灵魂对话
+🔮 **星运祈愿** — 每日塔罗 + 求签，给生活加点仪式感
+📬 **智囊快报** — AI 导师的深度研究报告
+📚 **提升技能** — 精选课程、书籍和工具推荐
+
+💡 **小贴士：** 你可以随时对导师说"帮我规划"，AI 会根据你的情况生成今日任务！
+
+点击左侧导航栏探索各个功能，或者先和导师聊聊吧 👇`;
+        appendMsg('mentor', guideHtml, true);
+        setTimeout(() => startConv('welcome'), 1500);
+    }
     else {
         // 如果有历史记录，则只在切换到导师页面的时候渲染，避免重复叠加渲染（由switchPage接管）
         showQR();
