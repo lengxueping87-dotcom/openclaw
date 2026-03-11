@@ -1088,13 +1088,17 @@ async function sendUser(text) {
                 finalText = r.replace(jsonMatch[0], '').trim();
                 
                 let notifyStr = [];
-                // 写入每日盲盒
+                // 写入每日盲盒（每天最多 6 个）
+                const MAX_DAILY_BOXES = 6;
                 if(planData.daily && planData.daily.length > 0) {
                     const today = todayStr();
                     if(!blindboxes[today]) blindboxes[today] = [];
-                    planData.daily.forEach(t => {
-                        blindboxes[today].push({ t, xp: 15, id: genId(), status: 'hidden', photo: null });
-                    });
+                    const remaining = MAX_DAILY_BOXES - blindboxes[today].length;
+                    if(remaining > 0) {
+                        planData.daily.slice(0, remaining).forEach(t => {
+                            blindboxes[today].push({ t, xp: 15, id: genId(), status: 'hidden', photo: null });
+                        });
+                    }
                     DB.set('blindboxes', blindboxes);
                     const dbge = document.getElementById('daily-badge');
                     if(dbge) { dbge.textContent = blindboxes[today].length; dbge.style.display='inline-block'; }
@@ -1268,13 +1272,9 @@ function renderDaily(){
                 <div class="blindbox-task">
                     <div class="blindbox-task-title">${escHtml(b.t)}</div>
                     <div class="blindbox-task-xp">+${b.xp} 积分</div>
-                    <div class="blindbox-actions" style="display:flex;flex-direction:column;gap:6px;margin-top:6px;width:100%;">
-                        <button class="btn-primary" style="padding:5px 10px;font-size:11px;width:100%;" onclick="event.stopPropagation();completeBlindboxDirectly('${b.id}')"><i data-lucide="check-circle" style="width:12px;height:12px;margin-right:3px;"></i>完成 (+${b.xp}xp)</button>
-                        <div style="display:flex;gap:6px;width:100%;">
-                            <button class="btn-secondary" style="flex:1;padding:4px;font-size:10px;" onclick="event.stopPropagation();openDraftPad('${b.id}')">📝 草稿</button>
-                            <button class="btn-secondary" style="flex:1;padding:4px;font-size:10px;" onclick="event.stopPropagation();openPhotoModal('${b.id}')">📸 传图</button>
-                            <button class="btn-secondary" style="flex:1;padding:4px;font-size:10px;" onclick="event.stopPropagation();sealBox('${b.id}')">📦 封存</button>
-                        </div>
+                    <div class="blindbox-actions" style="display:flex;gap:8px;margin-top:8px;width:100%;">
+                        <button class="btn-secondary" style="flex:1;padding:8px 12px;font-size:13px;" onclick="event.stopPropagation();openDraftPad('${b.id}')">📝 草稿本</button>
+                        <button class="btn-primary" style="flex:1;padding:8px 12px;font-size:13px;" onclick="event.stopPropagation();completeBlindboxDirectly('${b.id}')">✅ 完成 (+${b.xp}xp)</button>
                     </div>
                 </div>
             </div>
@@ -1457,17 +1457,14 @@ function renderEnvelope(boxes){
     const env=document.getElementById('envelope-section');if(!env)return;
     const allDone=boxes.every(b=>b.status==='completed'||b.status==='sealed');
     const hasCompleted=boxes.some(b=>b.status==='completed');
-    const todayJStr = todayStr();
-    const journalDone = (journals[todayJStr]||[]).reduce((s,p)=>s+p.length,0) > 0;
     
     if(hasCompleted){
         env.style.display='block';
         const envelope=document.getElementById('envelope');
         const hint=document.getElementById('envelope-hint');
-        if(!allDone||!journalDone){
+        if(!allDone){
             envelope.classList.add('locked');
-            if(allDone&&!journalDone) hint.textContent='还需要写一篇心灵日记才能解锁 🔒';
-            else hint.textContent='还有盲盒未完成 🔒';
+            hint.textContent='还有盲盒未完成 🔒';
         }else{
             envelope.classList.remove('locked');
             hint.textContent='撕开火漆，阅读导师亲笔点评 ';
@@ -1479,10 +1476,8 @@ window.openEnvelope=()=>{
     const boxes=getTodayBoxes();
     const allDone=boxes.every(b=>b.status==='completed'||b.status==='sealed');
     const hasCompleted=boxes.some(b=>b.status==='completed');
-    const todayJStr = todayStr();
-    const journalDone = (journals[todayJStr]||[]).reduce((s,p)=>s+p.length,0) > 0;
     
-    if(!hasCompleted||!allDone||!journalDone)return;
+    if(!hasCompleted||!allDone)return;
     const nameStr = profile?.name ? profile.name.charAt(0) : '密';
     
     // 初始化信件元素状态

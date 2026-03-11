@@ -2764,85 +2764,129 @@ body.theme-dark #api-status-badge.connected {
     text-align: center;
 }
 
-.envelope-section h2 {
-    font-size: 18px;
-    margin-bottom: 8px;
-}
-
 .envelope-hint {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-muted);
-    margin-bottom: 20px;
+    margin-bottom: 16px;
+    font-style: italic;
 }
 
 .envelope {
-    width: 200px;
-    height: 140px;
+    width: 260px;
+    height: 170px;
     margin: 0 auto;
     cursor: pointer;
     position: relative;
-    transition: transform 0.3s ease;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease;
 }
 
 .envelope:hover {
-    transform: scale(1.05);
+    transform: scale(1.06) translateY(-4px);
+    filter: brightness(1.05);
 }
 
 .envelope.locked {
-    opacity: 0.4;
+    opacity: 0.45;
     cursor: not-allowed;
     pointer-events: none;
+    filter: grayscale(0.3);
 }
 
 .envelope-body {
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, #D4A853, #B8923A);
-    border-radius: var(--radius-md);
+    background: linear-gradient(145deg, #d4a867 0%, #c49550 30%, #b8863e 60%, #a87832 100%);
+    border-radius: 6px;
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 20px rgba(212, 168, 83, 0.3);
+    box-shadow:
+        0 6px 24px rgba(168, 120, 50, 0.35),
+        0 1px 3px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    overflow: hidden;
 }
 
-.envelope-flap {
+/* 牛皮纸纹理叠加 */
+.envelope-texture {
+    position: absolute;
+    inset: 0;
+    background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.02) 2px, rgba(0, 0, 0, 0.02) 4px),
+        repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(0, 0, 0, 0.015) 3px, rgba(0, 0, 0, 0.015) 6px);
+    pointer-events: none;
+    border-radius: 6px;
+}
+
+.envelope-body .envelope-flap {
     position: absolute;
     top: -1px;
     left: 0;
     right: 0;
-    height: 50%;
-    background: linear-gradient(180deg, #E8C06A, #D4A853);
-    clip-path: polygon(0 0, 50% 60%, 100% 0);
-    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    height: 52%;
+    background: linear-gradient(180deg, #dbb676 0%, #c99d58 50%, #c49550 100%);
+    clip-path: polygon(0 0, 50% 65%, 100% 0);
+    border-radius: 6px 6px 0 0;
+    z-index: 1;
 }
 
-.wax-seal {
+/* 红色火漆印章 */
+.wax-seal-trigger {
     position: absolute;
-    z-index: 2;
-    font-size: 32px;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-    animation: sealPulse 2s ease-in-out infinite;
+    z-index: 3;
+    width: 52px;
+    height: 52px;
+    background: radial-gradient(circle at 35% 35%, #d4342d 0%, #b02020 45%, #8a1515 80%, #6b0f0f 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+        0 3px 8px rgba(0, 0, 0, 0.4),
+        0 1px 2px rgba(0, 0, 0, 0.2),
+        inset 0 1px 2px rgba(255, 200, 200, 0.25),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.2);
+    animation: sealFloat 3s ease-in-out infinite;
 }
 
-@keyframes sealPulse {
+.seal-ring {
+    position: absolute;
+    width: 42px;
+    height: 42px;
+    border: 2px solid rgba(255, 215, 0, 0.4);
+    border-radius: 50%;
+}
+
+.seal-text {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 20px;
+    font-weight: 900;
+    color: #ffd700;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 1;
+}
+
+@keyframes sealFloat {
 
     0%,
     100% {
-        transform: scale(1)
+        transform: scale(1);
     }
 
     50% {
-        transform: scale(1.08)
+        transform: scale(1.06);
     }
 }
 
 .envelope-label {
     position: absolute;
-    bottom: 16px;
-    font-size: 11px;
-    color: #8B6914;
+    bottom: 14px;
+    font-size: 12px;
+    color: #7a5a20;
     font-weight: 600;
+    letter-spacing: 1px;
 }
 
 .envelope.opened .envelope-flap {
@@ -2856,7 +2900,7 @@ body.theme-dark #api-status-badge.connected {
     }
 }
 
-.envelope.opened .wax-seal {
+.envelope.opened .wax-seal-trigger {
     animation: sealBreak 0.4s ease forwards;
 }
 
@@ -3141,9 +3185,13 @@ body.theme-dark #api-status-badge.connected {
     left: 0;
     width: 100%;
     height: 100%;
-    background: #e1d3c1;
-    border-radius: 4px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(145deg, #c9a06c 0%, #b8924e 40%, #a88040 70%, #9a7535 100%);
+    border-radius: 6px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25), inset 0 0 40px rgba(0, 0, 0, 0.05);
+    /* kraft paper texture */
+    background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.015) 2px, rgba(0, 0, 0, 0.015) 4px),
+        repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(0, 0, 0, 0.01) 3px, rgba(0, 0, 0, 0.01) 6px);
 }
 
 .envelope-front {
@@ -3152,20 +3200,20 @@ body.theme-dark #api-status-badge.connected {
     left: 0;
     width: 100%;
     height: 100%;
-    background: #eedfcc;
-    border-radius: 4px;
+    background: linear-gradient(145deg, #d4a867, #c49550);
+    border-radius: 6px;
     clip-path: polygon(0% 100%, 100% 100%, 100% 0, 50% 50%, 0 0);
     z-index: 5;
     pointer-events: none;
 }
 
-.envelope-flap {
+#letter-modal .envelope-flap {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 60%;
-    background: #eedfcc;
+    background: linear-gradient(180deg, #dbb676, #c99d58);
     clip-path: polygon(0 0, 100% 0, 50% 100%);
     transform-origin: top;
     transition: transform 1s cubic-bezier(0.34, 1.56, 0.64, 1);
