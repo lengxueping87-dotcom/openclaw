@@ -1296,6 +1296,7 @@ function renderDaily(){
     // 信封
     renderEnvelope(boxes);
     updateXP();
+    updateDailyBadge();
 }
 
 window.revealBox=id=>{const boxes=getTodayBoxes();const b=boxes.find(x=>x.id===id);if(b){b.status='revealed';DB.set('blindboxes',blindboxes);renderDaily();}};
@@ -1889,6 +1890,16 @@ function showToast(a){const t=document.getElementById('achievement-toast');if(!t
 // === 初始化 ===
 function init(){
     checkAuthAndOnboarding();
+    
+    // 测试阶段：自动预配置豆包 AI（用户无需手动设置）
+    if(!DB.get('ai_key')) {
+        DB.set('ai_provider', 'doubao');
+        DB.set('ai_url', 'https://ark.cn-beijing.volces.com/api/v3/chat/completions');
+        DB.set('ai_key', '372454e5-0d6b-431a-9797-7ff15032f072');
+        DB.set('ai_model', 'doubao-seed-2-0-pro-260215');
+    }
+    updateAPIBadge();
+    
     if(profile) initMentor();
     updateStreak();
     updateXP();
@@ -1898,15 +1909,28 @@ function init(){
     const activePage = document.querySelector('.nav-item.active')?.dataset.page || 'mentor';
     switchPage(activePage);
 
-    const boxes=getTodayBoxes();
-    const hidden=boxes.filter(b=>b.status==='hidden').length;
-    if(hidden>0){const badge=document.getElementById('daily-badge');if(badge){badge.textContent=hidden;badge.style.display='inline';}}
+    updateDailyBadge();
     // 日记badge
     const jd=journals[todayStr()]||'';
     if(jd.length===0){const jb=document.getElementById('journal-badge');if(jb){jb.style.display='inline';}}
     
     // 异步: AI 智囊快报自动推送（不阻塞初始化）
     setTimeout(() => generateInboxReport(), 3000);
+}
+
+// 统一更新盲盒 badge（未完成数量，0 则隐藏）
+function updateDailyBadge() {
+    const boxes = getTodayBoxes();
+    const pending = boxes.filter(b => b.status === 'hidden' || b.status === 'revealed').length;
+    const badge = document.getElementById('daily-badge');
+    if(badge) {
+        if(pending > 0) {
+            badge.textContent = pending;
+            badge.style.display = 'inline-flex';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
 }
 
 window.addEventListener('DOMContentLoaded', init);
@@ -2035,59 +2059,58 @@ setTimeout(() => { if(window.lucide) lucide.createIcons(); }, 100);
 (function injectDemoData(){
     if(DB.get('demo_loaded')) return;
 
-    // 1. 多维度目标
+    // 1. 多维度目标（通用型，适配所有用户）
     const demoGoals = [
         { id:'dg1', title:'每天花15分钟写下内心想法', desc:'用草稿本记录灵感和反思', timeframe:'daily', category:'mind', progress:30, deadline:'' },
-        { id:'dg2', title:'每天花20分钟学习一个新技能', desc:'短视频剪辑/文案写作/排版设计', timeframe:'daily', category:'tech', progress:20, deadline:'' },
-        { id:'dg3', title:'本周完成3篇对标账号深度分析', desc:'找到3个同领域优质账号，分析内容策略', timeframe:'weekly', category:'marketing', progress:0, deadline:'' },
-        { id:'dg4', title:'本周发布第一条小红书笔记', desc:'不用完美，发出去就是胜利', timeframe:'weekly', category:'sidebiz', progress:0, deadline:'' },
-        { id:'dg5', title:'本月搭建个人品牌初步框架', desc:'确定定位、头像、简介、内容方向', timeframe:'monthly', category:'sidebiz', progress:0, deadline:'' },
+        { id:'dg2', title:'每天花20分钟学习一个感兴趣的技能', desc:'根据你的兴趣选择学习内容', timeframe:'daily', category:'career', progress:20, deadline:'' },
+        { id:'dg3', title:'本周完成3篇同领域优质内容分析', desc:'找到3个你感兴趣领域的标杆，学习他们的方法', timeframe:'weekly', category:'career', progress:0, deadline:'' },
+        { id:'dg4', title:'本周尝试输出一条原创内容', desc:'不用完美，发出去就是胜利', timeframe:'weekly', category:'marketing', progress:0, deadline:'' },
+        { id:'dg5', title:'本月明确个人定位和方向', desc:'确定你的优势领域和发展方向', timeframe:'monthly', category:'career', progress:0, deadline:'' },
         { id:'dg6', title:'本月读完一本个人成长书籍', desc:'推荐：《认知觉醒》或《被讨厌的勇气》', timeframe:'monthly', category:'mind', progress:0, deadline:'' },
-        { id:'dg7', title:'本季度获得第一批50个真实粉丝', desc:'通过持续输出有价值内容积累', timeframe:'quarterly', category:'marketing', progress:0, deadline:'' },
-        { id:'dg8', title:'本季度实现第一笔线上收入', desc:'哪怕只有1元，也是从0到1的突破', timeframe:'quarterly', category:'finance', progress:0, deadline:'' },
-        { id:'dg9', title:'中期：形成稳定的内容输出节奏', desc:'每周3-5篇，形成自己的内容体系', timeframe:'midterm', category:'career', progress:0, deadline:'' },
-        { id:'dg10', title:'愿景：建立有影响力的个人IP', desc:'成为细分领域的意见领袖', timeframe:'vision', category:'career', progress:0, deadline:'' }
+        { id:'dg7', title:'本季度在选定领域建立初步影响力', desc:'通过持续输出有价值内容积累', timeframe:'quarterly', category:'marketing', progress:0, deadline:'' },
+        { id:'dg8', title:'本季度实现第一笔额外收入', desc:'哪怕只有1元，也是从0到1的突破', timeframe:'quarterly', category:'finance', progress:0, deadline:'' },
+        { id:'dg9', title:'中期：形成稳定的成长节奏', desc:'每周有固定的学习和输出时间', timeframe:'midterm', category:'career', progress:0, deadline:'' },
+        { id:'dg10', title:'愿景：成为自己想成为的人', desc:'活出真实自我，实现人生价值', timeframe:'vision', category:'mind', progress:0, deadline:'' }
     ];
     const existingGoals = DB.get('goals', []);
     if(existingGoals.length === 0) DB.set('goals', demoGoals);
 
-    // 2. 今日盲盒
+    // 2. 今日盲盒（通用型，不预设特定身份）
     const today = new Date().toISOString().split('T')[0];
     if(!blindboxes[today] || blindboxes[today].length === 0){
         blindboxes[today] = [
             { t:'花15分钟写下：如果不考虑任何限制，我最想过什么样的生活？（点📝草稿写）', xp:15, id:'demo1-'+Date.now(), status:'hidden', photo:null },
-            { t:'在小红书搜索"宝妈转型"，收藏3篇让你觉得"我也可以"的文章', xp:20, id:'demo2-'+Date.now(), status:'hidden', photo:null },
-            { t:'用手机拍一张今天让你开心的小瞬间', xp:10, id:'demo3-'+Date.now(), status:'hidden', photo:null },
-            { t:'花20分钟看一个短视频剪辑入门教程（B站搜"剪映入门"）', xp:25, id:'demo4-'+Date.now(), status:'hidden', photo:null },
-            { t:'[AI已完成] 3个适合转型的小红书对标账号分析 → 查看智囊快报', xp:30, id:'demo5-'+Date.now(), status:'completed', photo:null }
+            { t:'在你感兴趣的领域，找3篇优质内容收藏学习', xp:20, id:'demo2-'+Date.now(), status:'hidden', photo:null },
+            { t:'花20分钟学一个新技能的入门视频', xp:25, id:'demo3-'+Date.now(), status:'hidden', photo:null },
+            { t:'写下今天最有成就感的一件小事', xp:10, id:'demo4-'+Date.now(), status:'hidden', photo:null }
         ];
         DB.set('blindboxes', blindboxes);
     }
 
-    // 3. 智囊快报
+    // 3. 智囊快报（通用型，不预设特定身份）
     const existingInbox = DB.get('ai_inbox', []);
     if(existingInbox.length === 0){
         DB.set('ai_inbox', [
             {
-                title:'3个适合你的小红书对标账号深度分析',
-                tag:'📊 对标研究',
+                title:'如何找到适合自己的成长方向',
+                tag:'🧭 方向指引',
                 time:new Date().toLocaleString('zh-CN'),
                 read:false,
-                content:'<h3>📌 账号1：@芒果妈妈成长记</h3><p><b>粉丝量：</b>8.3万 | <b>风格：</b>宝妈成长日记，每篇300-500字配生活感照片</p><p><b>标题公式：</b>身份认同 + 痛点共鸣 + 解决承诺</p><p>例："35岁全职妈妈，我用3个月从焦虑到月入5000"</p><hr><h3>📌 账号2：@慢慢变好的小鹿</h3><p><b>粉丝量：</b>5.1万 | <b>风格：</b>自我成长+情绪管理，文字温暖治愈</p><p><b>更新节奏：</b>周一干货、周三故事、周五互动（投票/提问涨粉快）</p><hr><h3>📌 账号3：@设计师妈妈的副业路</h3><p><b>粉丝量：</b>3.8万 | <b>风格：</b>教程类，教宝妈做Canva海报、剪映剪视频</p><p><b>核心理念：</b>"教别人=最好的学习"</p><hr><p>💡 <b>爱因博士建议：</b>先从模仿账号1开始——不需要专业技能，只需要真诚分享自己的故事。</p>'
+                content:'<h3>🔍 三步找到你的方向</h3><p><b>第一步：</b>回忆过去一年里，你在做什么事的时候最有成就感？</p><p><b>第二步：</b>列出你愿意免费做的3件事——这往往隐藏着你的热情所在。</p><p><b>第三步：</b>找到这些热情与市场需求的交集。</p><hr><p>💡 <b>爱因博士建议：</b>不要追求"完美方向"，先从一个小兴趣开始行动。方向是走出来的，不是想出来的。</p>'
             },
             {
-                title:'宝妈转型自媒体：3个平台对比分析',
+                title:'3个平台对比：哪个最适合你起步',
                 tag:'🔍 市场分析',
                 time:new Date(Date.now()-3600000).toLocaleString('zh-CN'),
                 read:false,
-                content:'<h3>平台对比</h3><p>📱 <b>小红书</b> — 图文为主，女性用户多，宝妈群体活跃 ✅ 推荐首选</p><p>🎬 <b>抖音</b> — 流量大，短视频门槛低，手机就能拍</p><p>📝 <b>微信公众号</b> — 深度内容，粉丝粘性高，适合后期沉淀</p><hr><p>💡 <b>爱因博士建议：</b>先主攻小红书，图文上手最快，宝妈群体活跃。等积累内容和信心再拓展抖音。</p>'
+                content:'<h3>平台对比</h3><p>📱 <b>小红书</b> — 图文为主，适合分享生活经验和专业知识</p><p>🎬 <b>抖音</b> — 流量大，短视频门槛低，手机就能拍</p><p>📝 <b>微信公众号</b> — 深度内容，粉丝粘性高，适合后期沉淀</p><hr><p>💡 <b>爱因博士建议：</b>选择你最常刷的那个平台开始——你对它的内容生态最熟悉。</p>'
             },
             {
                 title:'本周成长计划已生成 ✨',
                 tag:'📋 智能规划',
                 time:new Date(Date.now()-7200000).toLocaleString('zh-CN'),
                 read:true,
-                content:'<h3>本周重点</h3><ul><li>✅ 每天15分钟草稿本写想法（已添加到每日盲盒）</li><li>📱 完成3篇对标账号分析（AI已完成✅ 看上面的报告）</li><li>📝 尝试写第一条小红书标题（不用发布，写出来就好）</li><li>📖 开始读《认知觉醒》前3章</li></ul><p style="margin-top:12px;font-style:italic;opacity:0.8;">苏拉底说：这周的目标不是"完成所有"，而是"开始一件"。你已经迈出了最难的一步——决定改变。</p>'
+                content:'<h3>本周重点</h3><ul><li>✅ 每天15分钟写想法（已添加到每日盲盒）</li><li>🔍 分析3个你感兴趣领域的优质内容</li><li>📝 尝试写一段自己的原创内容（不用发布，写出来就好）</li><li>📖 开始读一本你一直想读的书</li></ul><p style="margin-top:12px;font-style:italic;opacity:0.8;">苏拉底说：这周的目标不是"完成所有"，而是"开始一件"。你已经迈出了最难的一步——决定改变。</p>'
             }
         ]);
     }
